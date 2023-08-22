@@ -1,4 +1,4 @@
-use std::{borrow::Cow, collections::BTreeMap};
+use std::{borrow::Cow, collections::BTreeMap, io::Write};
 
 use itertools::Itertools;
 
@@ -16,6 +16,7 @@ pub struct PromptTemplate {
 }
 
 impl PromptTemplate {
+    /// Format the prompt template with the given values.
     pub fn format(&self, values: &BTreeMap<String, String>) -> String {
         // first asserting that all variables in the values
         self.variables.iter().for_each(|(key, value)| {
@@ -49,6 +50,23 @@ impl PromptTemplate {
 
         result
     }
+    
+
+    /// Save a prompt template to a file.
+    pub fn save(&self, path: &str) -> std::io::Result<()> {
+        let mut file = std::fs::File::create(path)?;
+        file.write_all(serde_json::to_string(self).unwrap().as_bytes())?;
+        Ok(())
+    }
+
+    /// Load a prompt template from a file.
+    pub fn load(path: &str) -> std::io::Result<Self> {
+        let file = std::fs::File::open(path)?;
+        let reader = std::io::BufReader::new(file);
+        let result = serde_json::from_reader(reader)?;
+        Ok(result)
+    }
+
     fn parse_from_string<S: ToString>(s: S) -> PromptTemplate {
         let s = s.to_string();
         let mut variables = BTreeMap::new();
@@ -188,4 +206,16 @@ fn test_prompt_format() {
         println!("formatted: {:?}", formatted);
         assert_eq!(formatted, result[i]);
     }
+}
+
+#[test]
+fn test_save_load() {
+    let prompt = "a simple prompt with a partial variable: {var:\"default value\"}";
+    let parsed = PromptTemplate::from(prompt.to_string());
+    parsed.save("test.json").unwrap();
+    let loaded = PromptTemplate::load("test.json").unwrap();
+    assert_eq!(parsed, loaded);
+
+    // cleanup
+    std::fs::remove_file("test.json").unwrap();
 }
