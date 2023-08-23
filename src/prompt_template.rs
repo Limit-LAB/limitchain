@@ -3,6 +3,7 @@ use std::{borrow::Cow, collections::BTreeMap, io::Write};
 use itertools::Itertools;
 
 /// A prompt template is a string with variables that can be replaced with values.
+/// ** IMPORTANT: stop is a reserved variable name **
 /// "a simple prompt"
 /// "a simple prompt with a variable: {var}"
 /// "a simple prompt with a variable: {var} and another: {var2}"
@@ -17,10 +18,10 @@ pub struct PromptTemplate {
 
 impl PromptTemplate {
     /// Format the prompt template with the given values.
-    pub fn format(&self, values: &BTreeMap<String, String>) -> String {
+    pub fn format(&self, values: &BTreeMap<String, String>) -> Option<String> {
         // first asserting that all variables in the values
         self.variables.iter().for_each(|(key, value)| {
-            if value == "" {
+            if value.is_empty() {
                 assert!(
                     values.contains_key(key),
                     "missing variable {} in values",
@@ -31,10 +32,8 @@ impl PromptTemplate {
         let mut values = Cow::Borrowed(values);
         // then setting the default values
         self.variables.iter().for_each(|(key, value)| {
-            if value != "" {
-                if !values.contains_key(key) {
-                    values.to_mut().insert(key.clone(), value.clone());
-                }
+            if !value.is_empty() && !values.contains_key(key) {
+                values.to_mut().insert(key.clone(), value.clone());
             }
         });
 
@@ -42,15 +41,14 @@ impl PromptTemplate {
         for (k, v) in self
             .variables_insert_positions
             .iter()
-            .sorted_by(|(k1, v1), (k2, v2)| v1.cmp(v2))
+            .sorted_by(|(_k1, v1), (_k2, v2)| v1.cmp(v2))
             .rev()
         {
-            result.insert_str(*v, values.get(k).unwrap());
+            result.insert_str(*v, values.get(k)?);
         }
 
-        result
+        Some(result)
     }
-    
 
     /// Save a prompt template to a file.
     pub fn save(&self, path: &str) -> std::io::Result<()> {
@@ -132,7 +130,7 @@ impl From<String> for PromptTemplate {
 
 #[test]
 fn test_prompt_template() {
-    let templates = vec![
+    let templates = [
         "a simple prompt",
         "a simple prompt with a variable: {var}",
         "a simple prompt with a variable: {var} and another: {var2}",
@@ -169,7 +167,7 @@ fn test_prompt_template() {
 
 #[test]
 fn test_prompt_format() {
-    let templates = vec![
+    let templates = [
         "a simple prompt",
         "a simple prompt with a variable: {var}",
         "a simple prompt with a variable: {var} and another: {var2}",
@@ -192,7 +190,7 @@ fn test_prompt_format() {
         BTreeMap::new(),
         BTreeMap::new(),
     ];
-    let result = vec![
+    let result = [
         "a simple prompt",
         "a simple prompt with a variable: value",
         "a simple prompt with a variable: value and another: value2",
@@ -204,7 +202,7 @@ fn test_prompt_format() {
         let formatted = parsed.format(&vars[i]);
         println!("template: {:?}", parsed);
         println!("formatted: {:?}", formatted);
-        assert_eq!(formatted, result[i]);
+        assert_eq!(formatted, Some(result[i].to_string()));
     }
 }
 
