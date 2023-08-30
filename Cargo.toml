@@ -1,12 +1,12 @@
 [package]
-name = "anychain"
+name = "limitchain"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-async-openai = "0.13"
+async-openai = "0.14"
 
 http = "0.2"
 

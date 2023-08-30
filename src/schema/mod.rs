@@ -5,7 +5,10 @@
 
 use std::collections::BTreeMap;
 
+use crate::chain::Message;
+
+#[derive(Debug, Clone)]
 pub struct Generation {
-    pub text: Vec<String>,
+    pub text: Vec<Message>,
     pub info: Option<BTreeMap<String, String>>,
 }
