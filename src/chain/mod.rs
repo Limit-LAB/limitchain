@@ -1,36 +1,14 @@
 pub mod llm_chain;
+pub mod seq_chain;
 
 use std::{collections::BTreeMap, str::FromStr};
 
 use serde::Serialize;
 
-use crate::{prompt_template::PromptTemplate, schema::Generation};
-
-#[derive(Debug, Clone, Serialize)]
-pub struct Message {
-    pub role: String,
-    pub content: String,
-}
-impl FromStr for Message {
-    type Err = String;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        // split ':' and take the first one as role
-        let mut split = s.splitn(2, ": ");
-        if let Some(role) = split.next() {
-            if let Some(content) = split.next() {
-                return Ok(Message {
-                    role: role.to_string(),
-                    content: content.to_string(),
-                });
-            } else {
-                return Err("Invalid message".to_string());
-            }
-        } else {
-            return Err("Invalid message".to_string());
-        }
-    }
-}
+use crate::{
+    prompt_template::PromptTemplate,
+    schema::{Generation, Message},
+};
 
 #[async_trait::async_trait]
 pub trait LLM: Serialize + Send + Sync {
@@ -87,15 +65,7 @@ pub trait Chain: Serialize {
     }
 
     /// better override this
-    fn create_output(&self, generation: Generation) -> Option<BTreeMap<String, Message>> {
-        // take the first generation
-        let text = generation.text.first()?;
-        let mut output = BTreeMap::new();
-        for key in self.get_output_keys() {
-            output.insert(key, text.clone());
-        }
-        Some(output)
-    }
+    fn create_output(&self, generation: Generation) -> Option<BTreeMap<String, Message>>;
 
     /// apply function generates the output from the input
     async fn apply(

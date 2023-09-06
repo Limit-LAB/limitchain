@@ -12,7 +12,7 @@ use itertools::Itertools;
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct PromptTemplate {
     text_template: String,
-    variables: BTreeMap<String, String>,
+    pub(crate) variables: BTreeMap<String, String>,
     variables_insert_positions: BTreeMap<String, usize>,
 }
 

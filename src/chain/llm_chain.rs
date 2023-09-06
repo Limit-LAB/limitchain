@@ -1,102 +1,82 @@
-use async_openai::types::{ChatCompletionRequestMessage, CreateChatCompletionRequest};
+use std::collections::BTreeMap;
+
+use async_trait::async_trait;
 use itertools::Itertools;
+use serde::Serialize;
 
-use crate::client::openai::{OpenAIClient};
+use crate::{
+    prompt_template::PromptTemplate,
+    schema::{Generation, Message},
+};
 
-use super::*;
+use super::{Chain, LLM};
 
-fn message_to_chat_completion_request_message(message: Message) -> ChatCompletionRequestMessage {
-    ChatCompletionRequestMessage {
-        role: match message.role.as_str().to_lowercase().as_str() {
-            "user" => async_openai::types::Role::User,
-            "assistant" => async_openai::types::Role::Assistant,
-            "system" => async_openai::types::Role::System,
-            _ => panic!("Invalid role"),
-        },
-        content: Some(message.content),
-        ..Default::default()
-    }
+/// {question} -> {answer}
+#[derive(Debug, Clone, Serialize)]
+pub struct LLMChain<Executor: Send + Sync + Serialize + LLM + Clone> {
+    prompt_template: Option<PromptTemplate>,
+    executor: Executor,
 }
 
-#[async_trait::async_trait]
-impl LLM for OpenAIClient {
-    async fn generate(&self, input: Vec<Message>, stop: Vec<String>) -> Generation {
-        let client = self
-            .client
-            .get_or_init(|| async_openai::Client::with_config(self.config.clone()));
-        let res = client
-            .chat()
-            .create(CreateChatCompletionRequest {
-                model: self.model.clone(),
-                messages: input
-                    .into_iter()
-                    .map(message_to_chat_completion_request_message)
-                    .collect(),
-                stop: Some(async_openai::types::Stop::StringArray(stop)),
-                n: self.n,
-                max_tokens: self.max_tokens,
-                temperature: self.temperature,
-                top_p: self.top_p,
-                presence_penalty: self.presence_penalty,
-                frequency_penalty: self.frequency_penalty,
-                user: self.user.clone(),
-                ..Default::default()
-            })
-            .await
-            .unwrap();
-
-        Generation {
-            text: res
-                .choices
-                .iter()
-                .map(|choice| Message {
-                    role: choice.message.role.clone().to_string(),
-                    content: choice.message.content.clone().unwrap(),
-                })
-                .collect(),
-            info: {
-                let mut info = BTreeMap::new();
-                // usage
-                if let Some(usage) = res.usage {
-                    info.insert("prompt_tokens".to_string(), usage.prompt_tokens.to_string());
-                    info.insert(
-                        "completion_tokens".to_string(),
-                        usage.completion_tokens.to_string(),
-                    );
-                    info.insert("total_tokens".to_string(), usage.total_tokens.to_string());
-                }
-                // finish reason
-
-                info.insert(
-                    "finish_reason".to_string(),
-                    res.choices
-                        .iter()
-                        .map(|c| c.finish_reason.clone())
-                        .filter(|r| r.is_some())
-                        .map(|r| r.unwrap())
-                        .collect_vec()
-                        .join(", "),
-                );
-                Some(info)
-            },
+impl<Executor: Send + Sync + Serialize + LLM + Clone> LLMChain<Executor> {
+    pub fn new(prompt_template: Option<PromptTemplate>, executor: Executor) -> Self {
+        Self {
+            prompt_template,
+            executor,
         }
     }
 }
 
+#[async_trait]
+impl<Executor: Send + Sync + Serialize + LLM + Clone> Chain for LLMChain<Executor> {
+    fn get_input_keys(&self) -> Vec<String> {
+        self.prompt_template
+            .as_ref()
+            .map_or(vec!["question".to_string()], |t| {
+                t.variables.keys().cloned().collect_vec()
+            })
+    }
+
+    fn get_output_keys(&self) -> Vec<String> {
+        vec!["answer".to_string()]
+    }
+
+    fn get_prompt_template(&self) -> PromptTemplate {
+        self.prompt_template
+            .clone()
+            .unwrap_or_else(|| PromptTemplate::from("{question}".to_string()))
+    }
+
+    fn get_llm(&self) -> impl LLM {
+        self.executor.clone()
+    }
+
+    fn create_output(&self, generation: Generation) -> Option<BTreeMap<String, Message>> {
+        let mut output = BTreeMap::new();
+        output.insert("answer".to_string(), generation.text[0].clone());
+        Some(output)
+    }
+}
+
 #[tokio::test]
-async fn test_openai_client() {
-    let client = OpenAIClient {
-        n: Some(3),
-        ..Default::default()
+async fn test_llm_chain_openai() {
+    use crate::btreemap;
+    use crate::client::openai::*;
+    dotenvy::dotenv().unwrap();
+
+    let chain = LLMChain {
+        prompt_template: Some(PromptTemplate::from("{question}".to_string())),
+        executor: OpenAIClient::default(),
     };
-    let res = client
-        .generate(
-            vec![
-                Message::from_str("SYSTEM: you are lemon's AI cute maid Ashly, lemon is a programmer, you speak cutely and uses emoji alot, you never conclute things").unwrap(),
-                Message::from_str("USER: write something about comparing rust and go").unwrap(),
-            ],
+
+    let res = chain
+        .apply(
+            &btreemap! {
+                "question".to_string() => "What is human?".to_string()
+            },
             vec!["stop".to_string()],
         )
         .await;
-    println!("{:#?}", res)
+
+    println!("{:?}", res);
 }
