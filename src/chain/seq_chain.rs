@@ -100,10 +100,12 @@ async fn test_bind_chain() {
     const question2: &str = r"write a brief summary of that in chinese";
 
     let chain1 = LLMChain::new(
+        vec![],
         Some(PromptTemplate::from("{question1}".to_string())),
         OpenAIClient::default(),
     );
     let chain2 = LLMChain::new(
+        vec![],
         Some(PromptTemplate::from("{question2}".to_string())),
         OpenAIClient::default(),
     );
