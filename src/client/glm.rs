@@ -11,6 +11,7 @@ use sha2::Sha256;
 
 use crate::btreemap;
 use crate::chain::LLM;
+use crate::parser::unescape;
 use crate::schema::{Generation, Message};
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -101,7 +102,6 @@ pub struct GLMClient {
     pub meta: Option<GLMCharacterMeta>,
     pub temperature: Option<f32>,     // min: 0, max: 2, default: 1,
     pub top_p: Option<f32>,           // min: 0, max: 1, default: 1
-    pub n: Option<u8>,                // min:1, max: 128, default: 1
     pub enable_refers: Option<bool>,  // enable ref search information on internet
     pub refers_query: Option<String>, // what to search
 
@@ -115,11 +115,10 @@ impl Default for GLMClient {
     fn default() -> Self {
         Self {
             config: Default::default(),
-            model: "characterglm".to_string(),
+            model: "chatglm_std".to_string(),
             meta: None,
             temperature: Default::default(),
             top_p: Default::default(),
-            n: Default::default(),
             enable_refers: Default::default(),
             refers_query: Default::default(),
             reqwest_client: Default::default(),
@@ -151,6 +150,30 @@ impl LLM for GLMClient {
                 }),
             );
         }
+        // temperature
+        if self.temperature.is_some() {
+            input_json
+                .as_object_mut()
+                .unwrap()
+                .insert("temperature".to_string(), json!(self.temperature.unwrap()));
+        }
+        // top_p
+        if self.top_p.is_some() {
+            input_json
+                .as_object_mut()
+                .unwrap()
+                .insert("top_p".to_string(), json!(self.top_p.unwrap()));
+        }
+        // enable_refers
+        if self.enable_refers.is_some() {
+            input_json.as_object_mut().unwrap().insert(
+                "ref".to_string(),
+                json!({
+                    "enable": self.enable_refers.unwrap(),
+                    "query": self.refers_query.as_ref().unwrap_or(&"".to_string()),
+                }),
+            );
+        }
 
         let token =
             create_jwt_token(&self.config.api_key, std::time::Duration::from_secs(100)).unwrap();
@@ -168,15 +191,9 @@ impl LLM for GLMClient {
             ))
             .header("Authorization", token)
             .header("Content-Type", "application/json")
-            .body(input_json.to_string())
-            .send()
-            .await
-            .unwrap()
-            .json::<Response>()
-            .await
-            .unwrap();
+            .body(input_json.to_string());
 
-        println!("{:#?}", resp);
+        let resp = resp.send().await.unwrap().json::<Response>().await.unwrap();
 
         Generation {
             text: resp
@@ -187,7 +204,7 @@ impl LLM for GLMClient {
                 .iter()
                 .map(|choice| Message {
                     role: choice.role.clone(),
-                    content: choice.content.clone(),
+                    content: unescape(&choice.content).unwrap(),
                 })
                 .collect(),
             info: None,

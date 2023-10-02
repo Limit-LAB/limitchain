@@ -4,6 +4,7 @@ use serde::Deserialize;
 use super::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "chain_type")]
 pub struct SeqChain<Chain1: Chain + Serialize, Chain2: Chain + Serialize> {
     prompt_template: Option<PromptTemplate>,
     chain1: Chain1,
@@ -50,10 +51,15 @@ question:
 
     async fn generate(
         &self,
+        memory: Option<&Box<dyn Memory + Send + Sync>>,
+        llm: &impl LLM,
         input: &BTreeMap<String, String>,
         stop: Vec<String>,
     ) -> Option<Generation> {
-        let previous_output = self.chain1.generate(input, stop.clone()).await?;
+        let previous_output = self
+            .chain1
+            .generate(memory, llm, input, stop.clone())
+            .await?;
         let question = self.chain2.prepare_prompt(input)?;
         let prompt = self
             .get_prompt_template()
@@ -68,23 +74,26 @@ question:
         // debug
         println!("prompt: {}", prompt);
 
-        let prompt = vec![
-            Message::from_str("SYSTEM: using background to answer the following question").unwrap(),
+        let mut prompt = vec![
+            // Message::from_str("system: using background to answer the following question").unwrap(),
             Message {
                 role: "user".to_string(),
                 content: prompt,
             },
         ];
-        let llm = self.get_llm();
-        Some(llm.generate(prompt, stop).await)
+
+        match memory {
+            Some(mem) => {
+                let mut his = mem.get_history().await.unwrap();
+                his.append(&mut prompt);
+                Some(llm.generate(his, stop).await)
+            }
+            None => Some(llm.generate(prompt, stop).await),
+        }
     }
 
     fn create_output(&self, generation: Generation) -> Option<BTreeMap<String, Message>> {
         self.chain2.create_output(generation)
-    }
-
-    fn get_llm(&self) -> impl LLM {
-        self.chain2.get_llm()
     }
 }
 
@@ -95,24 +104,19 @@ async fn test_bind_chain() {
     use crate::client::openai::*;
     dotenvy::dotenv().unwrap();
 
-    const question1: &str =
-        r"what does LGTM means int git issues? and where it comes from? who is the author?";
-    const question2: &str = r"write a brief summary of that in chinese";
-
-    let chain1 = LLMChain::new(
-        vec![],
-        Some(PromptTemplate::from("{question1}".to_string())),
-        OpenAIClient::default(),
-    );
-    let chain2 = LLMChain::new(
-        vec![],
-        Some(PromptTemplate::from("{question2}".to_string())),
-        OpenAIClient::default(),
-    );
+    let question1: &str =
+        r"what does LGTM means in git issues? and where it comes from? who is the author?";
+    let question2: &str = r"write a brief summary of that in chinese";
+    let executor = OpenAIClient::default();
+    let chain1 = LLMChain::new(Some(PromptTemplate::from("{question1}".to_string())));
+    let chain2 = LLMChain::new(Some(PromptTemplate::from("{question2}".to_string())));
     let chain = SeqChain::new(None, chain1, chain2);
+    println!("{:#?}", serde_json::to_string(&chain).unwrap());
 
     let res = chain
         .apply(
+            None,
+            &executor,
             &btreemap! {
                 "question1".to_string() => question1.to_string(),
                 "question2".to_string() => question2.to_string(),
@@ -125,4 +129,26 @@ async fn test_bind_chain() {
     chain
         .serialize(&mut serde_json::Serializer::new(&mut std::io::stdout()))
         .unwrap();
+}
+
+#[test]
+fn serde_deserde() {
+    use super::llm_chain::*;
+    use crate::btreemap;
+    use crate::client::openai::*;
+    dotenvy::dotenv().unwrap();
+
+    let question1: &str =
+        r"what does LGTM means in git issues? and where it comes from? who is the author?";
+    let question2: &str = r"write a brief summary of that in chinese";
+    let executor = OpenAIClient::default();
+    let chain1 = LLMChain::new(Some(PromptTemplate::from("{question1}".to_string())));
+    let chain2 = LLMChain::new(Some(PromptTemplate::from("{question2}".to_string())));
+    let chain = SeqChain::new(None, chain1, chain2);
+
+    let str = serde_json::to_string(&chain).unwrap();
+    println!("{:#?}", str);
+
+    let chain: SeqChain<LLMChain, LLMChain> = serde_json::from_str(&str).unwrap();
+    println!("{:#?}", chain);
 }
