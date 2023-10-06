@@ -128,6 +128,9 @@ impl Default for GLMClient {
 
 #[async_trait::async_trait]
 impl LLM for GLMClient {
+    fn name(&self) -> &'static str {
+        "GLM"
+    }
     async fn generate(&self, input: Vec<Message>, _stop: Vec<String>) -> Generation {
         let mut input_json = json!({
             "prompt": input.iter().map(|x| {

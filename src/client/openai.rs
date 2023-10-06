@@ -126,6 +126,9 @@ fn message_to_chat_completion_request_message(message: Message) -> ChatCompletio
 
 #[async_trait::async_trait]
 impl LLM for OpenAIClient {
+    fn name(&self) -> &'static str {
+        "OpenAI"
+    }
     async fn generate(&self, input: Vec<Message>, stop: Vec<String>) -> Generation {
         let client = self
             .client

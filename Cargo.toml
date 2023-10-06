@@ -28,8 +28,3 @@ futures-util = "0.3"
 tokio = { version = "1.0", features = ["full"] }
 dotenvy = "0.15.7"
 
-colored = "2.0.4"
-
-[[bin]]
-name = "cli_chat"
-path = "bin/cli_chat.rs"

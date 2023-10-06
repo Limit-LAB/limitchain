@@ -1,3 +1,4 @@
+pub mod character_chain;
 pub mod llm_chain;
 pub mod map_reduce;
 pub mod map_rerank;
@@ -18,6 +19,7 @@ use crate::{
 
 #[async_trait::async_trait]
 pub trait LLM: Serialize + Send + Sync {
+    fn name(&self) -> &'static str;
     async fn generate(&self, input: Vec<Message>, stop: Vec<String>) -> Generation;
 }
 
