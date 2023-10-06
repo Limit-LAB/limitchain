@@ -70,34 +70,43 @@ Observation: the result of the action
 }
 
 pub fn unescape(s: &str) -> anyhow::Result<String> {
+    // 声明一个变量in_single_quote，用于判断是否处于单引号中
     let mut in_single_quote = false;
+    // 声明一个变量in_double_quote，用于判断是否处于双引号中
     let mut in_double_quote = false;
-
+    // 声明一个变量chars，用于获取字符串s中的每一个字符
     let mut chars = s.chars().enumerate();
-
+    // 声明一个变量res，用于存放转换后的字符串
     let mut res = String::with_capacity(s.len());
 
+    // 遍历字符串s中的每一个字符
     while let Some((_idx, c)) = chars.next() {
-        // when in a single quote, no escapes are possible
+        // 当处于单引号中时，不存在转义字符
         if in_single_quote {
             if c == '\'' {
+                // 当遇到单引号时，将in_single_quote设置为false，并继续遍历
                 in_single_quote = false;
                 continue;
             }
         } else if in_double_quote {
+            // 当处于双引号中时，不存在转义字符
             if c == '"' {
+                // 当遇到双引号时，将in_double_quote设置为false，并继续遍历
                 in_double_quote = false;
                 continue;
             }
 
+            // 当处于双引号中时，如果遇到转义字符，则进行转换
             if c == '\\' {
                 match chars.next() {
                     None => {
+                        // 如果字符串s以转义字符结尾，则返回错误
                         return Err(anyhow::anyhow!(
                             "UnescapeError: string ends with a single backslash"
                         ));
                     }
                     Some((idx, c2)) => {
+                        // 将转义字符转换为对应的字符，并添加到res中
                         res.push(match c2 {
                             'a' => '\u{07}',
                             'b' => '\u{08}',
@@ -116,6 +125,7 @@ pub fn unescape(s: &str) -> anyhow::Result<String> {
                             'u' => parse_unicode(&mut chars)
                                 .map_err(|x| anyhow::anyhow!("UnescapeError: {}", x))?,
                             _ => {
+                                // 如果遇到不合法的转义字符，则返回错误
                                 return Err(anyhow::anyhow!(
                                     "UnescapeError: invalid escape character: {}",
                                     c2
@@ -127,16 +137,20 @@ pub fn unescape(s: &str) -> anyhow::Result<String> {
                 };
             }
         } else if c == '\'' {
+            // 当处于单引号中时，遇到单引号，则将in_single_quote设置为true，并继续遍历
             in_single_quote = true;
             continue;
         } else if c == '"' {
+            // 当处于双引号中时，遇到双引号，则将in_double_quote设置为true，并继续遍历
             in_double_quote = true;
             continue;
         }
 
+        // 将字符c添加到res中
         res.push(c);
     }
 
+    // 返回转换后的字符串
     Ok(res)
 }
 
