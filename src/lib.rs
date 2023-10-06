@@ -3,6 +3,7 @@
 
 pub mod chain;
 pub mod client;
+pub mod document;
 pub mod parser;
 pub mod prompt_template;
 pub mod schema;

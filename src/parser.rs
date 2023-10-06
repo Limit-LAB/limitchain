@@ -77,7 +77,7 @@ pub fn unescape(s: &str) -> anyhow::Result<String> {
 
     let mut res = String::with_capacity(s.len());
 
-    while let Some((idx, c)) = chars.next() {
+    while let Some((_idx, c)) = chars.next() {
         // when in a single quote, no escapes are possible
         if in_single_quote {
             if c == '\'' {
