@@ -1,9 +1,11 @@
 use itertools::Itertools;
 
+use crate::document::splitter::default_splitter;
+
 use super::Splitter;
 
 pub struct RecursiveCharacterSplitter {
-    split_by: Vec<String>,
+    pub split_by: Vec<String>,
 }
 
 impl Default for RecursiveCharacterSplitter {
@@ -18,44 +20,6 @@ impl Default for RecursiveCharacterSplitter {
             ],
         }
     }
-}
-
-// 函数default_splitter，用于将字符串text按照len的长度，overlapping重叠量进行分割，返回一个字符串数组
-fn default_splitter(text: String, len: usize, overlapping: usize) -> Vec<String> {
-    // 如果text的长度小于len，则直接返回一个字符串数组，其中包含text
-    if text.len() <= len {
-        return vec![text];
-    }
-
-    // 将text转换为字符数组
-    let text = text.chars().collect::<Vec<char>>();
-    // 初始化一个字符串数组，用于存放分割后的字符串
-    let mut result = Vec::new();
-    // 初始化一个变量start，用于记录当前分割的起始位置
-    let mut start = 0;
-
-    // 当start + len小于text的长度时，循环执行以下操作
-    while start + len <= text.len() {
-        // 计算当前分割的结束位置
-        let end = start + len;
-        // 获取当前分割的字符串
-        let substring = &text[start..end];
-        // 将当前分割的字符串添加到字符串数组中
-        result.push(substring.iter().collect::<String>());
-        // 更新start的值，使其重新开始分割
-        start += len - overlapping;
-    }
-
-    // 当start小于text的长度时，循环执行以下操作
-    if start < text.len() {
-        // 获取剩余的字符串
-        let substring = &text[start..];
-        // 将剩余的字符串添加到字符串数组中
-        result.push(substring.iter().collect::<String>());
-    }
-
-    // 返回字符串数组
-    result
 }
 
 impl Splitter for RecursiveCharacterSplitter {
@@ -103,9 +67,9 @@ chunk_overlap：文本块之间的最大重叠量。保留一些重叠可以保�
             "。".to_string(),
         ],
     };
-    let res = splitter.split(doc.to_string(), 50, 20);
+    let res = splitter.split(doc.to_string(), 100, 40);
     for r in res {
         println!("{}\n", r);
-        assert!(r.chars().collect::<Vec<_>>().len() <= 50);
+        assert!(r.chars().collect::<Vec<_>>().len() <= 100);
     }
 }

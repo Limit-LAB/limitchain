@@ -1,7 +1,7 @@
 use super::{xml::XMLLoader, Document, DocumentLoader};
 
 /// well as we all know that AI really knows how to read markdown
-struct MarkdownLoader {}
+pub struct MarkdownLoader {}
 
 impl DocumentLoader for MarkdownLoader {
     fn load_mem(&self, mem: &str) -> anyhow::Result<Vec<Document>> {
