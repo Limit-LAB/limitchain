@@ -39,5 +39,5 @@ impl FromStr for Message {
 #[derive(Debug, Clone)]
 pub struct Generation {
     pub text: Vec<Message>,
-    pub info: Option<BTreeMap<String, String>>,
+    pub info: Option<serde_json::Value>,
 }

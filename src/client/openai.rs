@@ -164,29 +164,11 @@ impl LLM for OpenAIClient {
                 })
                 .collect(),
             info: {
-                let mut info = BTreeMap::new();
-                // usage
                 if let Some(usage) = res.usage {
-                    info.insert("prompt_tokens".to_string(), usage.prompt_tokens.to_string());
-                    info.insert(
-                        "completion_tokens".to_string(),
-                        usage.completion_tokens.to_string(),
-                    );
-                    info.insert("total_tokens".to_string(), usage.total_tokens.to_string());
+                    serde_json::to_value(usage).ok()
+                } else {
+                    None
                 }
-                // finish reason
-
-                info.insert(
-                    "finish_reason".to_string(),
-                    res.choices
-                        .iter()
-                        .map(|c| c.finish_reason.clone())
-                        .filter(|r| r.is_some())
-                        .map(|r| r.unwrap())
-                        .collect_vec()
-                        .join(", "),
-                );
-                Some(info)
             },
         }
     }
