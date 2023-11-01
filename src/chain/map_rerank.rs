@@ -3,7 +3,6 @@ use std::collections::BTreeMap;
 use crate::{
     btreemap,
     chain::Chain,
-    client::glm::GLMClient,
     prompt_template::PromptTemplate,
     schema::{Generation, Message},
 };
@@ -54,7 +53,7 @@ for example: \\{\"score\": 0.5, \"doc\": \"blablabla\"\\}"
 
     async fn generate(
         &self,
-        memory: Option<&Box<dyn Memory + Send + Sync>>,
+        _memory: Option<&Box<dyn Memory + Send + Sync>>,
         llm: &impl LLM,
         input: &BTreeMap<String, String>,
         stop: Vec<String>,
@@ -102,7 +101,7 @@ for example: \\{\"score\": 0.5, \"doc\": \"blablabla\"\\}"
 
         let jsons = res_rerank
             .iter()
-            .map(|(answer, info)| {
+            .map(|(answer, _info)| {
                 let json = serde_json::from_str::<serde_json::Value>(answer).unwrap();
                 json
             })
@@ -131,6 +130,7 @@ for example: \\{\"score\": 0.5, \"doc\": \"blablabla\"\\}"
 #[tokio::test]
 async fn test_map_reduce() {
     use crate::chain::llm_chain::LLMChain;
+    use crate::client::glm::GLMClient;
     dotenvy::dotenv().unwrap();
 
     let map_chain = LLMChain::new(Some(PromptTemplate::from("{question}".to_string())));

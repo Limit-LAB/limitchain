@@ -1,6 +1,8 @@
 use itertools::Itertools;
 use serde::Deserialize;
 
+use crate::schema::memory::Memory;
+
 use super::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -134,14 +136,14 @@ async fn test_bind_chain() {
 #[test]
 fn serde_deserde() {
     use super::llm_chain::*;
-    use crate::btreemap;
+    
     use crate::client::openai::*;
     dotenvy::dotenv().unwrap();
 
-    let question1: &str =
+    let _question1: &str =
         r"what does LGTM means in git issues? and where it comes from? who is the author?";
-    let question2: &str = r"write a brief summary of that in chinese";
-    let executor = OpenAIClient::default();
+    let _question2: &str = r"write a brief summary of that in chinese";
+    let _executor = OpenAIClient::default();
     let chain1 = LLMChain::new(Some(PromptTemplate::from("{question1}".to_string())));
     let chain2 = LLMChain::new(Some(PromptTemplate::from("{question2}".to_string())));
     let chain = SeqChain::new(None, chain1, chain2);

@@ -7,6 +7,7 @@ edition = "2021"
 async-openai = "0.14"
 
 http = "0.2"
+# milvus-sdk-rust = "0.1.0"
 
 anyhow = "1.0"
 

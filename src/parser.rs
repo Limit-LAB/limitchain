@@ -105,7 +105,7 @@ pub fn unescape(s: &str) -> anyhow::Result<String> {
                             "UnescapeError: string ends with a single backslash"
                         ));
                     }
-                    Some((idx, c2)) => {
+                    Some((_idx, c2)) => {
                         // 将转义字符转换为对应的字符，并添加到res中
                         res.push(match c2 {
                             'a' => '\u{07}',

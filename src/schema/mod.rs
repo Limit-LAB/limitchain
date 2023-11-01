@@ -3,6 +3,8 @@
 // pub mod examples;
 // pub mod documents;
 
+pub mod memory;
+
 use std::{collections::BTreeMap, str::FromStr};
 
 use serde::{Deserialize, Serialize};

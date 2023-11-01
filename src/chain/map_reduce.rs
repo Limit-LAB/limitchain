@@ -1,9 +1,7 @@
 use std::collections::BTreeMap;
 
 use crate::{
-    btreemap,
     chain::Chain,
-    client::glm::GLMClient,
     prompt_template::PromptTemplate,
     schema::{Generation, Message},
 };
@@ -95,6 +93,8 @@ impl<MapChain: Chain + Serialize + Send + Sync, ReduceChain: Chain + Serialize +
 #[tokio::test]
 async fn test_map_reduce() {
     use crate::chain::llm_chain::LLMChain;
+    use crate::btreemap;
+    use crate::client::glm::GLMClient;
     dotenvy::dotenv().unwrap();
 
     let map_chain = LLMChain::new(Some(PromptTemplate::from("{question}".to_string())));

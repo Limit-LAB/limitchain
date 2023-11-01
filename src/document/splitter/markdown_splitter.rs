@@ -1,4 +1,4 @@
-use crate::document::loader::{markdown::MarkdownLoader, DocumentLoader};
+
 
 use super::{recursive_character_splitter::RecursiveCharacterSplitter, Splitter};
 
@@ -61,6 +61,9 @@ fn test_splitter() {
 
 #[test]
 fn test_split_md_doc() {
+    use crate::document::loader::markdown::MarkdownLoader;
+    use crate::document::loader::DocumentLoader;
+    
     let loader = MarkdownLoader {};
     let doc = loader.load_file("test_utils/md_example.md").unwrap();
 

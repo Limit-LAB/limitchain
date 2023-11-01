@@ -1,4 +1,4 @@
-use anyhow::anyhow;
+
 use quick_xml::{events::Event, Reader};
 use serde_json::json;
 
@@ -44,7 +44,7 @@ where
                             }));
                         }
                     }
-                    Event::End(tag) => {
+                    Event::End(_tag) => {
                         if tag_stack.last().is_some() {
                             tag_stack.pop();
                         }

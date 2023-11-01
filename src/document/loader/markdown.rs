@@ -1,4 +1,4 @@
-use super::{xml::XMLLoader, Document, DocumentLoader};
+use super::{Document, DocumentLoader};
 
 /// well as we all know that AI really knows how to read markdown
 pub struct MarkdownLoader {}

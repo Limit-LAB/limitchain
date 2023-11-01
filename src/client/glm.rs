@@ -1,15 +1,15 @@
-use std::collections::BTreeMap;
+
 use std::sync::OnceLock;
 
 use anyhow::{anyhow, Result};
 use hmac::{digest::KeyInit, Hmac};
 use jwt::SigningAlgorithm;
-use jwt::{token, AlgorithmType, Header, SignWithKey, ToBase64, Token};
+use jwt::{ToBase64};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use sha2::Sha256;
 
-use crate::btreemap;
+
 use crate::chain::LLM;
 use crate::parser::unescape;
 use crate::schema::{Generation, Message};
