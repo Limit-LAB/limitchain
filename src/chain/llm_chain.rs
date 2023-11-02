@@ -4,6 +4,7 @@ use async_trait::async_trait;
 
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
+use zhipuai_sdk_rust::models::characterglm::CharacterGLMMeta;
 
 use crate::{
     prompt_template::PromptTemplate,
@@ -55,7 +56,7 @@ impl Chain for LLMChain {
 #[tokio::test]
 async fn test_llm_chain_openai() {
     use crate::btreemap;
-    use crate::client::openai::*;
+    use crate::llm::client::openai::*;
     dotenvy::dotenv().unwrap();
 
     let chain = LLMChain {
@@ -82,7 +83,7 @@ async fn test_llm_chain_openai() {
 async fn test_llm_chain_glm() {
     use crate::schema::memory::InMemMemory;
     use crate::btreemap;
-    use crate::client::glm::*;
+    use crate::llm::client::glm::*;
     use crate::schema::memory::Memory;
     dotenvy::dotenv().unwrap();
     let mem = Box::new(InMemMemory::from(vec![Message{role:"user".to_string(),content:"你打的真菜".to_string(),},Message{role:"bot".to_string(),content:"上路被三人越塔，打野不在我怎么去，你告诉我？上路被三人越塔我都能保得住他吗？如果盲僧在的话我为什么不在？你告诉我，昂？盲僧都没有在为什么我要去......为...盲僧都不在你告诉我为什么我要去啊？啊？他被打野先越塔然后中单赶过去了，盲僧不在我为什么要去啊？啊？你...你告诉我，来，盲僧不在我为什么要去？你...来，我给你房管，你给我说话，来，这个叫你mud bee尊尼获加的这个臭.寄.吧.杠精你给我说话，来，你今天要说不明白你m明天就被车创死。你懂不懂？你m，我就看不惯你这种低分g在这抬杠呢。打野都没有反蹲到上路我怎么...我怎么保他？啊？c.n.m打野不在上路我怎么保他？不是急眼了你能说明白你就行，行不行？不...g东西你什么都说不明白你在这穷抬杠有什么意义吗？你告诉我？
@@ -92,17 +93,12 @@ async fn test_llm_chain_glm() {
         prompt_template: Some(PromptTemplate::from("{question}".to_string())),
     };
 
-    let executor = GLMClient {
-        model: "characterglm".to_string(),
-        meta: Some(GLMCharacterMeta {
-            user_info: "2B青年，喜欢玩英雄联盟".to_string(),
-            bot_info: "这哈比下的米诺，真是欧西给几遍也哇袄不够的，愿称其为一种冷峻的奥利安费。看似欧内的手淡淡地好汗，偶有哈姆的哈贝贝穿插其间，文宇背后的一坨史却足以哈比下。配合上几乎不加额外修饰的么么哒米诺，这部视频便不再是普通的一坨史，更像是一部微缩的啊嘿露西，一场时长极短的allin，似乎有些我超冰，匆匆而过转眼就尊尼获加，这又何其像是“说的道理”。".to_string(),
-            bot_name: "电棍".to_string(),
-            user_name: "akarachan".to_string(),
-        }),
-        // temperature: Some(0.8),
-        ..Default::default()
-    };
+    let executor = GLMClient::default().as_character(CharacterGLMMeta{
+        user_info: "2B青年，喜欢玩英雄联盟".to_string(),
+        bot_info: "这哈比下的米诺，真是欧西给几遍也哇袄不够的，愿称其为一种冷峻的奥利安费。看似欧内的手淡淡地好汗，偶有哈姆的哈贝贝穿插其间，文宇背后的一坨史却足以哈比下。配合上几乎不加额外修饰的么么哒米诺，这部视频便不再是普通的一坨史，更像是一部微缩的啊嘿露西，一场时长极短的allin，似乎有些我超冰，匆匆而过转眼就尊尼获加，这又何其像是“说的道理”。".to_string(),
+        bot_name: "电棍".to_string(),
+        user_name: Some("akarachan".to_string()),
+    });
 
     println!("{:#?}", serde_json::to_string(&chain).unwrap());
     let res = chain

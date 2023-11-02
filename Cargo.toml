@@ -8,10 +8,11 @@ async-openai = "0.14"
 
 http = "0.2"
 # milvus-sdk-rust = "0.1.0"
+zhipuai-sdk-rust = {path = "../zhipuai-sdk-rust", version = "0.1.0"}
 
 anyhow = "1.0"
 
-reqwest = "*"
+reqwest = "0.11.22"
 reqwest-eventsource = "0.4.0"
 jwt = "0.16"
 hmac = "*"

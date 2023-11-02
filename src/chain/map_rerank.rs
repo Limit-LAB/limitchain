@@ -130,7 +130,7 @@ for example: \\{\"score\": 0.5, \"doc\": \"blablabla\"\\}"
 #[tokio::test]
 async fn test_map_reduce() {
     use crate::chain::llm_chain::LLMChain;
-    use crate::client::glm::GLMClient;
+    use crate::llm::client::glm::GLMClient;
     dotenvy::dotenv().unwrap();
 
     let map_chain = LLMChain::new(Some(PromptTemplate::from("{question}".to_string())));

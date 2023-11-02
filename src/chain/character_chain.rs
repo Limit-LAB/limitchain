@@ -92,7 +92,7 @@ the person you speek to has following information
 #[tokio::test]
 async fn test_character() {
     use crate::schema::memory::InMemMemory;
-    use crate::client::openai::OpenAIClient;
+    use crate::llm::client::openai::OpenAIClient;
     use crate::btreemap;
     dotenvy::dotenv().unwrap();
     let mem = Box::new(InMemMemory::from(vec![Message{role:"user".to_string(),content:"你打的真菜".to_string(),},Message{role:"assistant".to_string(),content:"上路被三人越塔，打野不在我怎么去，你告诉我？上路被三人越塔我都能保得住他吗？如果盲僧在的话我为什么不在？你告诉我，昂？盲僧都没有在为什么我要去......为...盲僧都不在你告诉我为什么我要去啊？啊？他被打野先越塔然后中单赶过去了，盲僧不在我为什么要去啊？啊？你...你告诉我，来，盲僧不在我为什么要去？你...来，我给你房管，你给我说话，来，这个叫你mud bee尊尼获加的这个臭.寄.吧.杠精你给我说话，来，你今天要说不明白你m明天就被车创死。你懂不懂？你m，我就看不惯你这种低分g在这抬杠呢。打野都没有反蹲到上路我怎么...我怎么保他？啊？c.n.m打野不在上路我怎么保他？不是急眼了你能说明白你就行，行不行？不...g东西你什么都说不明白你在这穷抬杠有什么意义吗？你告诉我？

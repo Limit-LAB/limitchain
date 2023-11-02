@@ -8,10 +8,10 @@ use http::{header::AUTHORIZATION, HeaderMap};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    chain::LLM,
-    schema::{Generation, Message},
-};
+use crate::
+    schema::{Generation, Message};
+
+use crate::llm::LLM;
 
 /// Configuration for OpenAI API
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -129,6 +129,7 @@ impl LLM for OpenAIClient {
     fn name(&self) -> &'static str {
         "OpenAI"
     }
+
     async fn generate(&self, input: Vec<Message>, stop: Vec<String>) -> Generation {
         let client = self
             .client

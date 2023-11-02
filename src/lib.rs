@@ -1,7 +1,7 @@
 #![feature(return_position_impl_trait_in_trait)]
 #![feature(once_cell)]
 pub mod chain;
-pub mod client;
+pub mod llm;
 pub mod document;
 pub mod parser;
 pub mod prompt_template;

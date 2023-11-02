@@ -103,7 +103,7 @@ question:
 async fn test_bind_chain() {
     use super::llm_chain::*;
     use crate::btreemap;
-    use crate::client::openai::*;
+    use crate::llm::client::openai::*;
     dotenvy::dotenv().unwrap();
 
     let question1: &str =
@@ -137,7 +137,7 @@ async fn test_bind_chain() {
 fn serde_deserde() {
     use super::llm_chain::*;
     
-    use crate::client::openai::*;
+    use crate::llm::client::openai::*;
     dotenvy::dotenv().unwrap();
 
     let _question1: &str =

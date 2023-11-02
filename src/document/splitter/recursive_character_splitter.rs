@@ -24,27 +24,12 @@ impl Default for RecursiveCharacterSplitter {
 
 impl Splitter for RecursiveCharacterSplitter {
     fn split(&self, text: String, len: usize, overlapping: usize) -> Vec<String> {
-        assert!(overlapping < len);
-        let mut split_by = self.split_by.clone();
-        let splter = split_by.pop().unwrap();
-        let split = text.split(&splter).map(|s| s.to_string()).collect_vec();
-        split
-            .into_iter()
-            .flat_map(|s| {
-                if s.len() <= len {
-                    vec![s.trim().to_string()]
-                } else {
-                    if split_by.len() == 0 {
-                        default_splitter(s, len, overlapping)
-                    } else {
-                        let splitter = RecursiveCharacterSplitter {
-                            split_by: split_by.clone(),
-                        };
-                        splitter.split(s, len, overlapping)
-                    }
-                }
-            })
-            .collect_vec()
+        // TODO: 实现一个递归的splitter
+        // 挨个split一遍
+        // 选取合适的
+        // merge回去
+
+        text.chars().chunks(len).into_iter().map(|x| x.collect::<String>()).collect_vec()
     }
 }
 

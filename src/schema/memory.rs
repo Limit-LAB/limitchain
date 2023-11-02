@@ -59,3 +59,13 @@ impl From<Vec<Message>> for InMemMemory {
         }
     }
 }
+
+/// PGDBMemory is a memory that stores the history in a PostgreSQL database.
+/// ID: uuidv7 | TS | .. other .. | ROLE | MESSAGE
+/// SELECT ROLE, MESSAGE FROM TABLE (WHERE OTHER CLAUSE)? ORDER BY TS DESC;
+pub struct PGDBMemory {
+    // connection : Connection,
+    // table_name : String,
+    // insert_sql : Option<String>,
+    // select_sql : Option<String>,
+}

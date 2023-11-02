@@ -13,15 +13,8 @@ use serde::Serialize;
 
 use crate::{
     prompt_template::PromptTemplate,
-    schema::{Generation, Message, memory::Memory},
+    schema::{Generation, Message, memory::Memory}, llm::LLM,
 };
-
-#[async_trait::async_trait]
-pub trait LLM: Serialize + Send + Sync {
-    fn name(&self) -> &'static str;
-    async fn generate(&self, input: Vec<Message>, stop: Vec<String>) -> Generation;
-    // async fn generate_stream(&self, input: Vec<Message>, stop: Vec<String>) -> Pin<Box<dyn Stream<Item = Generation> + Send + Sync>>;
-}
 
 #[async_trait::async_trait]
 pub trait Chain: Serialize {

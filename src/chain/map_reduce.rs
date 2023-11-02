@@ -94,7 +94,7 @@ impl<MapChain: Chain + Serialize + Send + Sync, ReduceChain: Chain + Serialize +
 async fn test_map_reduce() {
     use crate::chain::llm_chain::LLMChain;
     use crate::btreemap;
-    use crate::client::glm::GLMClient;
+    use crate::llm::client::glm::GLMClient;
     dotenvy::dotenv().unwrap();
 
     let map_chain = LLMChain::new(Some(PromptTemplate::from("{question}".to_string())));
