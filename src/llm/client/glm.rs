@@ -2,13 +2,14 @@ use serde::{Serialize, Deserialize};
 use serde_json::json;
 use zhipuai_sdk_rust::models::*;
 use zhipuai_sdk_rust::models::characterglm::CharacterGLMMeta;
+use crate::parser::unescape;
 use crate::schema::{Message, Generation};
 use crate::llm::{LLM, Embedding};
 use zhipuai_sdk_rust::models::chatglm::ChatGLMInvokeParam;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GLMClient {
-    invoke_param: serde_json::Value,
+    pub invoke_param: serde_json::Value,
     pub model: String,
 }
 
@@ -65,9 +66,11 @@ impl LLM for GLMClient {
         };
 
         let res = model.invoke(InvokeMeta { prompt:invoke_prompt, invoke_param: self.invoke_param.clone() }).await;
-
         Generation {
-            text: res["data"]["choices"].as_array().unwrap().into_iter().map(|x| Message{role: x["role"].to_string(), content: x["content"].to_string()}).collect(),
+            text: res["data"]["choices"].as_array().unwrap().into_iter().map(|x| Message{role: x["role"].to_string(), content: {
+                let content = x["content"].as_str().unwrap();
+                unescape(content).unwrap()
+            } }).collect(),
             info: Some(
                 res["data"]["usage"].clone()
             )
